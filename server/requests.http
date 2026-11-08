@@ -1,0 +1,233 @@
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJnYW5kYWxmIiwiaWF0IjoxNzk0MTQ0MDg3LCJleHAiOjE3OTQxNDc2ODd9.ebsp9Rxdt1bZhKpvUs1P5wZoB38SfVpF4J9f_Y4TrKU
+@samToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJnYW5kYWxmIiwiaWF0IjoxNzk0MTQ0MDg3LCJleHAiOjE3OTQxNDc2ODd9.ebsp9Rxdt1bZhKpvUs1P5wZoB38SfVpF4J9f_Y4TrKU
+
+### ==================== HEALTH ====================
+
+GET {{baseUrl}}/health
+
+### ==================== AUTH: РЕГИСТРАЦИЯ ====================
+
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "frodo",
+  "email": "frodo@example.com",
+  "password": "ring12345"
+}
+
+### ==================== AUTH: ЛОГИН (gandalf / password123) ====================
+
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "gandalf",
+  "password": "password123"
+}
+
+### ==================== AUTH: ПРОФИЛЬ (нужен токен) ====================
+
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+### ==================== AUTH: ОБНОВИТЬ ПРОФИЛЬ ====================
+
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bio": "Обновлённое описание",
+  "avatarUrl": "https://example.com/gandalf.png"
+}
+
+### ==================== AUTH: ПРОФИЛЬ БЕЗ ТОКЕНА (401) ====================
+
+GET {{baseUrl}}/auth/profile
+
+### ==================== AUTH: ЗАНЯТЫЙ USERNAME (409) ====================
+
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "gandalf",
+  "email": "other@example.com",
+  "password": "password123"
+}
+
+### ==================== AUTH: НЕВЕРНЫЙ ПАРОЛЬ (401) ====================
+
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "gandalf",
+  "password": "wrong"
+}
+
+### ==================== AUTH: БИТЫЙ JSON (400) ====================
+
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{ "username": "gandalf", "password": }
+
+### ==================== КОМНАТЫ: СОЗДАТЬ ОТКРЫТУЮ (нужен токен) ====================
+
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Новая комната",
+  "scenario": "Тестовый сценарий",
+  "isPrivate": false,
+  "maxPlayers": 5
+}
+
+### ==================== КОМНАТЫ: СОЗДАТЬ ЗАКРЫТУЮ ====================
+
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Секретная",
+  "scenario": "Только для избранных",
+  "isPrivate": true,
+  "maxPlayers": 3,
+  "password": "secret123"
+}
+
+### ==================== КОМНАТЫ: ЗАКРЫТАЯ БЕЗ ПАРОЛЯ (400) ====================
+
+POST {{baseUrl}}/rooms
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Секретная",
+  "scenario": "Только для избранных",
+  "isPrivate": true
+}
+
+### ==================== КОМНАТЫ: БЕЗ ТОКЕНА (401) ====================
+
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "name": "Комната",
+  "scenario": "Сценарий"
+}
+
+### ==================== КОМНАТЫ: СПИСОК ====================
+
+GET {{baseUrl}}/rooms
+
+### ==================== КОМНАТЫ: ОДНА С ПЕРСОНАЖАМИ ====================
+
+GET {{baseUrl}}/rooms/1
+
+### ==================== ПЕРСОНАЖИ: СОЗДАТЬ В ROOM 1 (GM = gandalf) ====================
+
+POST {{baseUrl}}/characters
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roomId": 1,
+  "name": "Фродо",
+  "race": "Хоббит",
+  "class": "Вор",
+  "hp": 18,
+  "maxHp": 18,
+  "strength": 8,
+  "dexterity": 14,
+  "intelligence": 12
+}
+
+### ==================== ПЕРСОНАЖИ: В ЧУЖУЮ КОМНАТУ (403) ====================
+
+POST {{baseUrl}}/characters
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roomId": 2,
+  "name": "Не пройдёт",
+  "race": "Человек",
+  "class": "Воин",
+  "hp": 20,
+  "maxHp": 20
+}
+
+### ==================== ПЕРСОНАЖИ: PATCH STATS (только GM) ====================
+
+PATCH {{baseUrl}}/characters/1/stats
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "level": 4,
+  "hp": 20
+}
+
+### ==================== JOIN: gandalf в свою комнату 1 (role=gm) ====================
+
+POST {{baseUrl}}/rooms/1/join
+Authorization: Bearer {{token}}
+
+### ==================== РЕГИСТРАЦИЯ sam ====================
+
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "sam",
+  "email": "sam@example.com",
+  "password": "sam12345"
+}
+
+### ==================== ЛОГИН sam ====================
+
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "sam",
+  "password": "sam12345"
+}
+
+### ==================== JOIN: sam в комнату 1 с персонажем 1 ====================
+
+POST {{baseUrl}}/rooms/1/join
+Authorization: Bearer {{samToken}}
+Content-Type: application/json
+
+{
+  "characterId": 1
+}
+
+### ==================== JOIN: sam в комнату 2 с неверным паролем (403) ====================
+
+POST {{baseUrl}}/rooms/2/join
+Authorization: Bearer {{samToken}}
+Content-Type: application/json
+
+{
+  "password": "wrong"
+}
+
+### ==================== LEAVE: sam покидает комнату 1 ====================
+
+POST {{baseUrl}}/rooms/1/leave
+Authorization: Bearer {{samToken}}
+
+### ==================== KICK: gandalf кикает sam из комнаты 1 ====================
+
+DELETE {{baseUrl}}/rooms/1/participants/3
+Authorization: Bearer {{token}}
