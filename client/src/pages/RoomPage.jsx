@@ -1,4 +1,4 @@
-// src/pages/RoomPage.jsx
+// client/src/pages/RoomPage.jsx
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -7,8 +7,11 @@ import {
   createCharacter,
   updateCharacterStats,
   deleteCharacter as apiDeleteCharacter,
+  joinRoom,
+  fetchMessages,
   extractError,
 } from '../api';
+import RoomChat from '../components/RoomChat';
 
 const EMPTY_FORM = {
   name: '', race: '', class: '',
@@ -24,6 +27,10 @@ export default function RoomPage({ roomId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Состояния для вступления в комнату
+  const [isJoined, setIsJoined] = useState(false);
+  const [joining, setJoining] = useState(false);
+
   // Поиск с debounce
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,7 +43,7 @@ export default function RoomPage({ roomId, onBack }) {
   // Флаг: пользователь — GM этой комнаты
   const isGM = room && user && room.gameMasterId === user.id;
 
-  // ===== Загрузка комнаты + персонажей =====
+  // ===== Загрузка комнаты + персонажей + проверка вступления =====
   const loadRoom = async () => {
     setLoading(true);
     setError(null);
@@ -47,6 +54,16 @@ export default function RoomPage({ roomId, onBack }) {
       ]);
       setRoom(roomRes.data);
       setCharacters(charsRes.data);
+
+      // Проверяем, вступил ли пользователь в комнату (пытаемся получить сообщения)
+      try {
+        await fetchMessages(roomId, { limit: 1 });
+        setIsJoined(true);
+      } catch (e) {
+        if (e.response?.status === 403) {
+          setIsJoined(false); // 403 = не участник
+        }
+      }
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -73,6 +90,24 @@ export default function RoomPage({ roomId, onBack }) {
       .then(({ data }) => setCharacters(data))
       .catch((err) => setError(extractError(err)));
   }, [searchQuery, roomId]);
+
+  // ===== Вступление в комнату =====
+  const handleJoin = async () => {
+    setJoining(true);
+    setError(null);
+    try {
+      await joinRoom(roomId);
+      setIsJoined(true);
+    } catch (err) {
+      if (err.response?.data?.error === 'Вы уже в этой комнате') {
+        setIsJoined(true); // Если уже вступил, просто скрываем кнопку
+      } else {
+        setError(extractError(err));
+      }
+    } finally {
+      setJoining(false);
+    }
+  };
 
   // ===== Оптимистичное добавление =====
   const onAdd = async (e) => {
@@ -154,8 +189,18 @@ export default function RoomPage({ roomId, onBack }) {
       <p className="subtitle">
         GM: {room.gameMaster?.username} · {room.isPrivate ? '🔒 Закрытая' : '🌐 Открытая'}
       </p>
+
       <div className="panel">
-        <div style={{ whiteSpace: 'pre-wrap' }}>{room.scenario}</div>
+        <div style={{ whiteSpace: 'pre-wrap', marginBottom: 16 }}>{room.scenario}</div>
+        
+        {/* Кнопка вступления / Статус */}
+        {!isJoined ? (
+          <button className="btn" onClick={handleJoin} disabled={joining}>
+            {joining ? 'Вступление...' : '🚪 Вступить в комнату'}
+          </button>
+        ) : (
+          <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>✅ Вы в комнате</span>
+        )}
       </div>
 
       {error && (
@@ -259,6 +304,9 @@ export default function RoomPage({ roomId, onBack }) {
           </div>
         )}
       </div>
+
+      {/* Чат рендерится ТОЛЬКО если пользователь вступил в комнату и она активна */}
+      {isJoined && room.isActive && <RoomChat roomId={room.id} />}
     </div>
   );
 }

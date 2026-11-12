@@ -217,3 +217,98 @@ h3 { margin: 0; font-size: 18px; }
   margin-bottom: 12px;
   font-size: 14px;
 }
+
+/* ===== Чат ===== */
+.chat-list {
+  max-height: 400px;
+  overflow-y: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-message {
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.chat-message.chat-roll {
+  border-left: 3px solid var(--accent);
+  background: rgba(233, 69, 96, 0.1);
+}
+
+.chat-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.chat-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-system {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px;
+}
+
+.chat-form { margin-top: 8px; }
+.chat-form .form-row { margin-bottom: 0; }
+
+/* ===== Анимация броска кубика ===== */
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.btn-secondary:disabled {
+  animation: shake 0.5s infinite;
+  background-color: var(--accent-2);
+  color: white;
+}
+
+/* ===== Анимация броска кубика ===== */
+.rolling-animation {
+  border-left: 3px solid var(--accent);
+  background: rgba(233, 69, 96, 0.15);
+  animation: pulse-bg 1s infinite;
+}
+
+@keyframes pulse-bg {
+  0% { background: rgba(233, 69, 96, 0.15); }
+  50% { background: rgba(233, 69, 96, 0.35); }
+  100% { background: rgba(233, 69, 96, 0.15); }
+}
+
+.dice-icon {
+  display: inline-block;
+  animation: spin-dice 1s linear infinite;
+  margin-left: 8px;
+  font-size: 18px;
+}
+
+@keyframes spin-dice {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1); }
+}

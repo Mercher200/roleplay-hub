@@ -5,14 +5,12 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-// Автоматически подставляем JWT, если он есть
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Удобный разбор ошибок сервера
 export function extractError(err) {
   if (err.response?.data?.error) return err.response.data.error;
   if (err.response?.data?.details?.length) return err.response.data.details.join('; ');
@@ -40,3 +38,8 @@ export const updateCharacterStats = (id, stats) => api.patch(`/characters/${id}/
 export const deleteCharacter = (id) => api.delete(`/characters/${id}`);
 
 export default api;
+
+// ===== Messages =====
+export const fetchMessages = (roomId, params) => api.get(`/rooms/${roomId}/messages`, { params });
+export const sendMessage = (roomId, text) => api.post(`/rooms/${roomId}/messages`, { text });
+export const rollDice = (roomId, dice) => api.post(`/rooms/${roomId}/roll`, { dice });
